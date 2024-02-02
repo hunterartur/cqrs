@@ -45,5 +45,8 @@ rabbit:
 
 server:
   port: 8081
-
-
+springdoc:
+  api-docs:
+    path: /cqrs/api-docs
+  swagger-ui:
+    path: /swagger-ui/index.html
