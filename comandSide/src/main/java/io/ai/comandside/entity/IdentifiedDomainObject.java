@@ -54,6 +54,7 @@ public abstract class IdentifiedDomainObject {
     @PrePersist
     public void prePersist() {
         this.createdDate = this.createdDate == null ? LocalDateTime.now() : this.createdDate;
+        nextVersion();
     }
 
     @PreUpdate

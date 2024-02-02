@@ -23,7 +23,6 @@ public class Information extends IdentifiedValueObject {
     public Information(String name, String description) {
         this.name = name;
         this.description = description;
-        this.nextVersion();
     }
 
     @Override

@@ -46,7 +46,6 @@ public class ProjectAggregate extends IdentifiedDomainObject {
         this.taskIds = new ArrayList<>();
         this.information = new Information(name, description);
         this.memberIds.add(userId);
-        this.nextVersion();
     }
 
     public ChangedProjectNameDomainEvent changeName(String newName) {

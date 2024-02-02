@@ -10,7 +10,7 @@ import lombok.Getter;
 @Table(name = "task_statuses")
 public class TaskStatus extends IdentifiedDomainObject {
 
-    @Column(name = "name")
+    @Column(name = "name", unique = true)
     private String name;
 
     @Column(name = "color")

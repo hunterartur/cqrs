@@ -6,6 +6,7 @@ import io.ai.comandside.event.task.AssignedExecutorToTaskDomainEvent;
 import io.ai.comandside.event.task.ChangedTaskNameDomainEvent;
 import io.ai.comandside.event.task.ChangedTaskStatusDomainEvent;
 import io.ai.comandside.valueobject.Information;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -33,18 +34,19 @@ public class TaskAggregate extends IdentifiedDomainObject {
     private List<UUID> executors;
 
     @OneToOne
-    @JoinColumn(name = "task_id")
+    @JoinColumn(name = "task_status_id")
     private TaskStatus taskStatus;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(referencedColumnName = "id")
     private Information information;
 
     @Column(name = "project_id")
     private UUID projectId;
 
-    public TaskAggregate(TaskStatus taskStatus, String name, String description, UUID projectId) {
+    public TaskAggregate(TaskStatus taskStatus, String name, String description, UUID projectId, UUID userId) {
         this.executors = new ArrayList<>();
+        this.executors.add(userId);
         this.taskStatus = taskStatus;
         this.information = new Information(name, description);
         this.projectId = projectId;

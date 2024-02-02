@@ -2,6 +2,7 @@ package io.ai.comandside.service;
 
 import io.ai.comandside.aggregate.ProjectAggregate;
 import io.ai.comandside.event.project.CreatedProjectDomainEvent;
+import io.ai.comandside.event.task.CreatedTaskDomainEvent;
 import io.ai.comandside.exception.ApplicationException;
 import io.ai.comandside.repository.ProjectRepository;
 import io.ai.comandside.repository.TaskRepository;
@@ -10,6 +11,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 
@@ -58,6 +60,11 @@ public class ProjectDomainService {
         var addedTaskInProjectDomainEvent = project.addTask(taskId);
         projectRepository.save(project);
         publisher.publishEvent(addedTaskInProjectDomainEvent);
+    }
+
+    @EventListener(classes = {CreatedTaskDomainEvent.class})
+    public void createdTaskHandler(CreatedTaskDomainEvent event) {
+        addTask(event.getProjectId(), event.getTaskId());
     }
 
     private ProjectAggregate getProjectById(UUID projectId) {

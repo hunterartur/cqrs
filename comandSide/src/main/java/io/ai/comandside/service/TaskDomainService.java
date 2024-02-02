@@ -36,10 +36,10 @@ public class TaskDomainService {
     private final RabbitTemplate rabbitTemplate;
 
     @Transactional
-    public void createTask(UUID projectId, String name, String description, UUID taskStatusId) {
+    public void createTask(UUID projectId, String name, String description, UUID taskStatusId, UUID userId) {
         checkProjectExistsById(projectId);
         var correctTaskStatus = getCorrectTaskStatus(taskStatusId);
-        var createTask = new TaskAggregate(correctTaskStatus, name, description, projectId);
+        var createTask = new TaskAggregate(correctTaskStatus, name, description, projectId, userId);
         var createdTask = taskRepository.save(createTask);
         publisher.publishEvent(new CreatedTaskDomainEvent(this, createdTask.getId(), projectId));
     }
@@ -78,7 +78,11 @@ public class TaskDomainService {
 
     @Transactional
     public void deleteTaskStatus(UUID taskStatusId) {
-        taskStatusRepository.deleteById(taskStatusId);
+        try {
+            taskStatusRepository.deleteById(taskStatusId);
+        } catch (Exception e) {
+            throw new ApplicationException(HttpStatusCode.valueOf(400), "ID не может быть NULL");
+        }
         publisher.publishEvent(new DeletedTaskStatusDomainEvent(this, taskStatusId));
     }
 
@@ -101,7 +105,7 @@ public class TaskDomainService {
     }
 
     private TaskAggregate getTaskById(UUID taskId) {
-        if (taskId == null) throw new ApplicationException(HttpStatusCode.valueOf(400), "ID задачи не может быть NULL");
+        if (taskId == null) throw new ApplicationException(HttpStatusCode.valueOf(400), "ID не может быть NULL");
         return taskRepository.findById(taskId).orElseThrow(
                 () -> new ApplicationException(HttpStatusCode.valueOf(404),
                         MessageFormat.format(ExceptionConstant.TASK_NOT_FOUND_EXCEPTION, taskId))

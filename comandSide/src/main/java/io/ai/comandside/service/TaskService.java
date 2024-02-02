@@ -16,7 +16,7 @@ public class TaskService {
     private final TaskDomainService taskDomainService;
 
     public void create(CreateTaskCommand command) {
-        taskDomainService.createTask(command.getProjectId(), command.getName(), command.getDescription(), command.getTaskStatusId());
+        taskDomainService.createTask(command.getProjectId(), command.getName(), command.getDescription(), command.getTaskStatusId(), command.getUserId());
     }
 
     public void changeName(ChangeTaskNameCommand command) {

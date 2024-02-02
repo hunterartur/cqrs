@@ -16,4 +16,5 @@ public class CreateTaskCommand {
     private String name;
     private String description;
     private UUID taskStatusId;
+    private UUID userId;
 }
