@@ -13,8 +13,6 @@ import io.ai.comandside.repository.TaskStatusRepository;
 import io.ai.comandside.service.constant.ExceptionConstant;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 
@@ -25,15 +23,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TaskDomainService {
 
+    private static final String EXCHANGE = "project";
+    private static final String TASK_STATUS_EXCHANGE = "task-status";
+
     private final TaskRepository taskRepository;
 
     private final TaskStatusRepository taskStatusRepository;
 
     private final ProjectRepository projectRepository;
 
-    private final ApplicationEventPublisher publisher;
-
-    private final RabbitTemplate rabbitTemplate;
+    private final MessagePublisher publisher;
 
     @Transactional
     public void createTask(UUID projectId, String name, String description, UUID taskStatusId, UUID userId) {
@@ -41,7 +40,8 @@ public class TaskDomainService {
         var correctTaskStatus = getCorrectTaskStatus(taskStatusId);
         var createTask = new TaskAggregate(correctTaskStatus, name, description, projectId, userId);
         var createdTask = taskRepository.save(createTask);
-        publisher.publishEvent(new CreatedTaskDomainEvent(this, createdTask.getId(), projectId));
+        publisher.eventPublishAndSend(new CreatedTaskDomainEvent(this, createdTask.getId(), projectId),
+                "create", EXCHANGE);
     }
 
     @Transactional
@@ -49,7 +49,7 @@ public class TaskDomainService {
         var updateTask = getTaskById(taskId);
         var updatedTaskDomainEvent = updateTask.changeName(newName);
         taskRepository.save(updateTask);
-        publisher.publishEvent(updatedTaskDomainEvent);
+        publisher.eventPublishAndSend(updatedTaskDomainEvent, "change-name", EXCHANGE);
     }
 
     @Transactional
@@ -59,7 +59,7 @@ public class TaskDomainService {
         checkTaskStatus(taskStatusId, taskStatus);
         var changedTaskStatusDomainEvent = task.setTaskStatus(taskStatus);
         taskRepository.save(task);
-        publisher.publishEvent(changedTaskStatusDomainEvent);
+        publisher.eventPublishAndSend(changedTaskStatusDomainEvent, "change-task-status", EXCHANGE);
     }
 
     @Transactional
@@ -67,13 +67,14 @@ public class TaskDomainService {
         var task = getTaskById(taskId);
         var assignExecutorToProjectDomainEvent = task.addExecutor(userId);
         taskRepository.save(task);
-        publisher.publishEvent(assignExecutorToProjectDomainEvent);
+        publisher.eventPublishAndSend(assignExecutorToProjectDomainEvent, "assign-executor", EXCHANGE);
     }
 
     @Transactional
     public void createTaskStatus(String name, String color) {
         var createdTask = taskStatusRepository.save(new TaskStatus(name, color));
-        publisher.publishEvent(new CreatedTaskStatusDomainEvent(this, createdTask.getId(), name, color));
+        publisher.eventPublishAndSend(new CreatedTaskStatusDomainEvent(this, createdTask.getId(), name, color),
+                "create", TASK_STATUS_EXCHANGE);
     }
 
     @Transactional
@@ -83,7 +84,8 @@ public class TaskDomainService {
         } catch (Exception e) {
             throw new ApplicationException(HttpStatusCode.valueOf(400), "ID не может быть NULL");
         }
-        publisher.publishEvent(new DeletedTaskStatusDomainEvent(this, taskStatusId));
+        publisher.eventPublishAndSend(
+                new DeletedTaskStatusDomainEvent(this, taskStatusId), "delete", TASK_STATUS_EXCHANGE);
     }
 
     private TaskStatus getCorrectTaskStatus(UUID taskStatusId) {

@@ -9,8 +9,6 @@ import io.ai.comandside.repository.TaskRepository;
 import io.ai.comandside.service.constant.ExceptionConstant;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -22,19 +20,20 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProjectDomainService {
 
+    private static final String EXCHANGE = "project";
+
     private final ProjectRepository projectRepository;
 
     private final TaskRepository taskRepository;
 
-    private final ApplicationEventPublisher publisher;
-
-    private final RabbitTemplate rabbitTemplate;
+    private final MessagePublisher publisher;
 
     @Transactional
     public void create(UUID userId, String name, String description) {
         var project = new ProjectAggregate(userId, name, description);
         var saveProject = projectRepository.save(project);
-        publisher.publishEvent(new CreatedProjectDomainEvent(this, saveProject.getId(), userId));
+        publisher.eventPublishAndSend(new CreatedProjectDomainEvent(this, saveProject.getId(), userId),
+                "create", EXCHANGE);
     }
 
     @Transactional
@@ -42,7 +41,7 @@ public class ProjectDomainService {
         var project = getProjectById(projectId);
         var changedProjectNameDomainEvent = project.changeName(newName);
         projectRepository.save(project);
-        publisher.publishEvent(changedProjectNameDomainEvent);
+        publisher.eventPublishAndSend(changedProjectNameDomainEvent, "change-name", EXCHANGE);
     }
 
     @Transactional
@@ -50,7 +49,7 @@ public class ProjectDomainService {
         var project = getProjectById(projectId);
         var addedUserToProjectDomainEvent = project.addUser(userId);
         projectRepository.save(project);
-        publisher.publishEvent(addedUserToProjectDomainEvent);
+        publisher.eventPublishAndSend(addedUserToProjectDomainEvent, "add-user", EXCHANGE);
     }
 
     @Transactional
@@ -59,7 +58,7 @@ public class ProjectDomainService {
         var project = getProjectById(projectId);
         var addedTaskInProjectDomainEvent = project.addTask(taskId);
         projectRepository.save(project);
-        publisher.publishEvent(addedTaskInProjectDomainEvent);
+        publisher.eventPublishAndSend(addedTaskInProjectDomainEvent, "add-task", EXCHANGE);
     }
 
     @EventListener(classes = {CreatedTaskDomainEvent.class})

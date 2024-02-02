@@ -27,14 +27,14 @@ rabbit:
       queues:
         project:
           name: project
-          route-keys: create, update, change-name, add-task
+          route-keys: create, add-user, change-name, add-task
     task:
       enable: true
       name: task
       queues:
         task:
           name: task
-          route-keys: create, change-name, change-task-status, add-executor
+          route-keys: create, change-name, change-task-status, assign-executor
     task-status:
       enable: true
       name: task-status
