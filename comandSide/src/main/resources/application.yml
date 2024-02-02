@@ -18,15 +18,30 @@ spring:
     username: guest
     password: guest
     addresses: localhost:5673,localhost15673
-    queues:
-      task-create:
-        exchange: task
-        routeKey: create
-        name: task.create
-      task-update:
-        exchange: task
-        routeKey: update
-        name: task.update
+
+rabbit:
+  exchanges:
+    project:
+      enable: true
+      name: project
+      queues:
+        project:
+          name: project
+          route-keys: create, update, change-name, add-task
+    task:
+      enable: true
+      name: task
+      queues:
+        task:
+          name: task
+          route-keys: create, change-name, change-task-status, add-executor
+    task-status:
+      enable: true
+      name: task-status
+      queues:
+        task-status:
+          name: task-status
+          route-keys: create, delete
 
 server:
   port: 8081
