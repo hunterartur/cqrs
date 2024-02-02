@@ -2,27 +2,25 @@ package io.ai.comandside.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.UuidGenerator;
+import lombok.Getter;
 
-import java.util.UUID;
-
+@Getter
 @Entity
 @Table(name = "task_statuses")
-@Data
-@NoArgsConstructor
-public class TaskStatus {
-
-    @Id
-    @UuidGenerator
-    private UUID id;
+public class TaskStatus extends IdentifiedDomainObject {
 
     @Column(name = "name")
     private String name;
 
     @Column(name = "color")
     private String color;
+
+    public TaskStatus(String name, String color) {
+        this.name = name;
+        this.color = color;
+    }
+
+    protected TaskStatus() {
+    }
 }

@@ -1,0 +1,18 @@
+package io.ai.comandside.command.project;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
+
+@Getter
+@Service
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateProjectCommand {
+    private String name;
+    private String description;
+    private UUID userId;
+}
