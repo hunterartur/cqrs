@@ -14,6 +14,10 @@ public final class MessagePublisher {
 
     private final RabbitTemplate rabbitTemplate;
 
+    public MessagePublisher getInstance() {
+        return this;
+    }
+
     public void eventPublishAndSend(DomainEvent domainEvent, String routeKey, String exchange) {
         publisher.publishEvent(domainEvent);
         rabbitTemplate.convertAndSend(exchange, routeKey, domainEvent);
